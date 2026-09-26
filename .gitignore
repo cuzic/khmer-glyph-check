@@ -1,0 +1,4 @@
+node_modules
+artifacts
+public/fonts
+server.log

@@ -1,0 +1,38 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    devDependencies:
+      '@fontsource/noto-sans':
+        specifier: ^5.0.0
+        version: 5.3.0
+      '@fontsource/noto-sans-jp':
+        specifier: ^5.0.0
+        version: 5.3.0
+      '@fontsource/noto-sans-khmer':
+        specifier: ^5.0.0
+        version: 5.3.0
+
+packages:
+
+  '@fontsource/noto-sans-jp@5.3.0':
+    resolution: {integrity: sha512-OZbBzZ8LrFRs2RFT2Cc0HUV2C2ZeSfyEXhDJWR0EZuZaraJfRubpvrFmUnCljuBDEkw8Vn6CE/+nf9dj9b+0lg==}
+
+  '@fontsource/noto-sans-khmer@5.3.0':
+    resolution: {integrity: sha512-gdbZkSmmMa7up92bksz5uKkjt70hCmLr9Q9B/Bxu4qYfXr+BvRLvf7NDAO4WP64coTdCcrzmHFciXirbdJEToQ==}
+
+  '@fontsource/noto-sans@5.3.0':
+    resolution: {integrity: sha512-fBCog2PY7DiVVTEEqtI/Qdinx/knobHYfoGpjFXdfBX5RoJaBp1Prw2G75p0OIsdlMZg3cLo0c+YbIUYOxnQJw==}
+
+snapshots:
+
+  '@fontsource/noto-sans-jp@5.3.0': {}
+
+  '@fontsource/noto-sans-khmer@5.3.0': {}
+
+  '@fontsource/noto-sans@5.3.0': {}

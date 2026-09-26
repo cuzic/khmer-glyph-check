@@ -1,22 +1,29 @@
 #!/usr/bin/env bash
 # Runs inside the emulator step. The static server already listens on the runner host (10.0.2.2 from the emulator).
-set -euo pipefail
+set -uo pipefail
 OUT="${OUT_DIR:-artifacts}"
 mkdir -p "$OUT"
 
 adb wait-for-device
-adb root || true
-adb wait-for-device
-# skip Chrome's first-run screens
-adb shell 'echo "chrome --disable-fre --no-default-browser-check --no-first-run" > /data/local/tmp/chrome-command-line'
-adb shell chmod 755 /data/local/tmp/chrome-command-line
+# skip Chrome's first-run screens (needs root; adbd restarts after `adb root`)
+if adb root >/dev/null 2>&1; then
+  sleep 3; adb wait-for-device; sleep 2
+  adb shell 'echo "chrome --disable-fre --no-default-browser-check --no-first-run" > /data/local/tmp/chrome-command-line'
+  adb shell chmod 755 /data/local/tmp/chrome-command-line
+fi
+adb shell settings put global window_animation_scale 0 || true
+adb logcat -c || true
 
-adb shell am start -a android.intent.action.VIEW -d "http://10.0.2.2:8000/?platform=android-api${API_LEVEL}" com.android.chrome
-
-for i in $(seq 1 90); do
-  [ -f "$OUT/report-android-api${API_LEVEL}.json" ] && break
-  sleep 1
+rc=0
+for mode in sys noto; do
+  name="android-api${API_LEVEL}-${mode}"
+  adb shell am force-stop com.android.chrome
+  adb shell am start -a android.intent.action.VIEW -d "'http://10.0.2.2:8000/?platform=${name}&mode=${mode}'" com.android.chrome
+  for i in $(seq 1 60); do [ -f "$OUT/report-${name}.json" ] && break; sleep 1; done
+  sleep 2
+  adb exec-out screencap -p > "$OUT/${name}.png"
+  [ -f "$OUT/report-${name}.json" ] || { echo "no report for $name"; rc=1; }
 done
-sleep 2
-adb exec-out screencap -p > "$OUT/android-api${API_LEVEL}.png"
-[ -f "$OUT/report-android-api${API_LEVEL}.json" ] || { echo "no report received"; exit 1; }
+adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" > "$OUT/android-api${API_LEVEL}-activity.txt" || true
+adb logcat -d -t 400 > "$OUT/android-api${API_LEVEL}-logcat.txt" || true
+exit $rc

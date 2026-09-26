@@ -31,11 +31,13 @@ jobs:
       - name: Open page in Safari and capture
         run: |
           mkdir -p artifacts
-          xcrun simctl openurl "$UDID" "http://localhost:8000/?platform=ios"
-          for i in $(seq 1 90); do [ -f artifacts/report-ios.json ] && break; sleep 1; done
-          sleep 2
-          xcrun simctl io "$UDID" screenshot artifacts/ios.png
-          test -f artifacts/report-ios.json
+          for mode in sys noto; do
+            xcrun simctl openurl "$UDID" "http://localhost:8000/?platform=ios-$mode&mode=$mode"
+            for i in $(seq 1 60); do [ -f "artifacts/report-ios-$mode.json" ] && break; sleep 1; done
+            sleep 4
+            xcrun simctl io "$UDID" screenshot "artifacts/ios-$mode.png"
+            test -f "artifacts/report-ios-$mode.json"
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: ios, path: "artifacts/*\nserver.log" }

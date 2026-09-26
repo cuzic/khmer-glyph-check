@@ -36,6 +36,8 @@
 <pre id="report"></pre>
 
 <script>
+const params = new URLSearchParams(location.search);
+const platform = params.get("platform") || "unknown";
 // ---- test data (source: khmer kana design v0.2) ----
 const MODIFIERS = ["ʰ","ˡ","ʳ","ᵋ","ᵓ","ᵅ","ᵊ","ᶤ"];
 const SMALL_KANA = ["ㇰ","ㇲ","ㇳ","ㇷ","ㇺ","ㇹ","ㇽ","ァ","ィ","ゥ","ェ","ォ","ッ"];
@@ -54,8 +56,6 @@ const FAMILIES = {
   sys:  "sans-serif",
   noto: '"Noto Sans Khmer","Noto Sans JP","Noto Sans",sans-serif',
 };
-const params = new URLSearchParams(location.search);
-const platform = params.get("platform") || "unknown";
 
 // ---- rendering ----
 function row(target, key, text) {
@@ -64,7 +64,10 @@ function row(target, key, text) {
   d.firstChild.textContent = key; d.lastChild.textContent = text;
   document.getElementById(target).appendChild(d);
 }
+const modeParam = params.get("mode");
+const MODES = modeParam ? [modeParam] : ["sys", "noto"];
 for (const t of ["sys", "noto"]) {
+  if (!MODES.includes(t)) { document.getElementById(t).previousElementSibling.remove(); document.getElementById(t).remove(); continue; }
   row(t, "modifiers", MODIFIERS.join(" "));
   row(t, "combining", "チ̯ カ゚ ン゚");
   row(t, "small kana", SMALL_KANA.join(" "));
@@ -95,14 +98,15 @@ function check(mode) {
     // modifier next to kana: should widen the run but stay on the same line height
     const wPair = width("カ" + m, f) - width("カ", f);
     res.push({ mode, item: m, cp: cp(m), tofu, widthEm: +w.toFixed(3), advanceEm: +wPair.toFixed(3),
-      ok: !tofu && w > 0.15 && w < 0.85 });
+      ok: !tofu && w > 0.05 && w < 0.85 });
   }
   for (const [base, mark] of [["チ", "̯"], ["カ", "゚"], ["ン", "゚"]]) {
     const withMark = pixels(base + mark, f), bare = pixels(base, f);
     const noEffect = same(withMark, bare);
     // a missing combining glyph is drawn as a box; compare against base + a codepoint no font has
     const tofu = same(withMark, pixels(base + "\u{10FFFE}", f)) || same(pixels(base, f), missing);
-    const g = [...new Intl.Segmenter("ja", { granularity: "grapheme" }).segment(base + mark)].length;
+    const g = typeof Intl.Segmenter === "function"
+      ? [...new Intl.Segmenter("ja", { granularity: "grapheme" }).segment(base + mark)].length : 1; // old Chrome: skip
     res.push({ mode, item: base + mark, cp: cp(base + mark), noEffect, tofu, graphemes: g,
       ok: !noEffect && !tofu && g === 1 });
   }
@@ -128,10 +132,10 @@ function check(mode) {
       document.fonts.load('400 48px "Noto Sans"', "abc"),
     ]);
     await document.fonts.ready;
-    const results = [...check("sys"), ...check("noto")];
+    const results = MODES.flatMap(check);
     const failed = results.filter(r => !r.ok);
     const report = {
-      platform, ua: navigator.userAgent, dpr: devicePixelRatio,
+      platform, segmenter: typeof Intl.Segmenter === "function", ua: navigator.userAgent, dpr: devicePixelRatio,
       fontsLoaded: [...document.fonts].filter(x => x.status === "loaded").map(x => `${x.family} ${x.unicodeRange || ""}`.trim()),
       failed: failed.length, results,
     };

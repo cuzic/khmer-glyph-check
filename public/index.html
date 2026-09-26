@@ -107,8 +107,10 @@ function check(mode) {
     const tofu = same(withMark, pixels(base + "\u{10FFFE}", f)) || same(pixels(base, f), missing);
     const g = typeof Intl.Segmenter === "function"
       ? [...new Intl.Segmenter("ja", { granularity: "grapheme" }).segment(base + mark)].length : 1; // old Chrome: skip
-    res.push({ mode, item: base + mark, cp: cp(base + mark), noEffect, tofu, graphemes: g,
-      ok: !noEffect && !tofu && g === 1 });
+    // a real combining mark has zero advance; a fallback/tofu box widens the cluster
+    const advance = +(width(base + mark, f) - width(base, f)).toFixed(3);
+    res.push({ mode, item: base + mark, cp: cp(base + mark), noEffect, tofu, graphemes: g, advance,
+      ok: !noEffect && !tofu && g === 1 && Math.abs(advance) < 0.05 });
   }
   for (const k of SMALL_KANA) {
     const p = pixels(k, f);

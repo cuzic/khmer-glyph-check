@@ -8,6 +8,8 @@
 <link rel="stylesheet" href="fonts/noto-sans-jp/400.css">
 <link rel="stylesheet" href="fonts/noto-sans-khmer/400.css">
 <style>
+  /* チ (from Noto Sans JP) + U+032F (from Noto Sans) in ONE font: Chrome/Android needs base+combining mark covered by a single font */
+  @font-face { font-family: "Kana C"; src: url("kana-font/kana-c.woff2") format("woff2"); unicode-range: U+30C1, U+032F; }
   /* subset of the full Noto Sans (Google's fontsource subsets lack U+032F): combining low line + modifier letters only */
   @font-face { font-family: "Kana Support"; src: url("kana-font/kana-support.woff2") format("woff2");
     unicode-range: U+032F, U+02B0-02B3, U+02E1, U+1D45, U+1D4A, U+1D4B, U+1D53, U+1D9C, U+1DA4; }
@@ -20,6 +22,7 @@
   .ok { color:var(--ok); } .ng { color:var(--ng); }
   .sys { font-family: sans-serif; }
   .sub { font-family: "Noto Sans Khmer", "Noto Sans JP", "Kana Support", "Noto Sans", sans-serif; }
+  .merged { font-family: "Kana C", "Noto Sans Khmer", "Noto Sans JP", "Kana Support", "Noto Sans", sans-serif; }
   .noto { font-family: "Noto Sans Khmer", "Noto Sans JP", "Noto Sans", sans-serif; }
   .row { display:flex; gap:12px; align-items:baseline; border-bottom:1px solid var(--line); padding:4px 0; }
   .row .k { flex:0 0 7em; font-size:11px; opacity:.7; word-break:break-all; }
@@ -38,6 +41,8 @@
 <div id="noto" class="noto"></div>
 <h2>sub (Noto Khmer, JP + Kana Support subset)</h2>
 <div id="sub" class="sub"></div>
+<h2>merged (Kana C: チ+U+032F single font, then Noto)</h2>
+<div id="merged" class="merged"></div>
 <h2>report</h2>
 <pre id="report"></pre>
 
@@ -61,6 +66,7 @@ const CASES = [
 const FAMILIES = {
   sys:  "sans-serif",
   noto: '"Noto Sans Khmer","Noto Sans JP","Noto Sans",sans-serif',
+  merged: '"Kana C","Noto Sans Khmer","Noto Sans JP","Kana Support","Noto Sans",sans-serif',
   sub:  '"Noto Sans Khmer","Noto Sans JP","Kana Support","Noto Sans",sans-serif',
 };
 
@@ -72,8 +78,8 @@ function row(target, key, text) {
   document.getElementById(target).appendChild(d);
 }
 const modeParam = params.get("mode");
-const MODES = modeParam ? [modeParam] : ["sys", "noto", "sub"];
-for (const t of ["sys", "noto", "sub"]) {
+const MODES = modeParam ? [modeParam] : ["sys", "noto", "sub", "merged"];
+for (const t of ["sys", "noto", "sub", "merged"]) {
   if (!MODES.includes(t)) { document.getElementById(t).previousElementSibling.remove(); document.getElementById(t).remove(); continue; }
   row(t, "modifiers", MODIFIERS.join(" "));
   row(t, "combining", "チ̯ カ゚ ン゚");
@@ -139,6 +145,7 @@ function check(mode) {
       document.fonts.load('400 48px "Noto Sans Khmer"', "សួស្តី"),
       document.fonts.load('400 48px "Noto Sans"', "ʰˡʳᵋᵓᵅᵊᶤ"),
       document.fonts.load('400 48px "Noto Sans"', "abc"),
+      document.fonts.load('400 48px "Kana C"', "チ\u032F"),
       document.fonts.load('400 48px "Kana Support"', "\u032F\u02B0\u02E1\u02B3\u1D4B\u1D53\u1D45\u1D4A\u1DA4"),
     ]);
     await document.fonts.ready;

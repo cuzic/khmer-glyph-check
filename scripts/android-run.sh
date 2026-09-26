@@ -16,7 +16,7 @@ adb shell pm grant com.android.chrome android.permission.POST_NOTIFICATIONS >/de
 adb logcat -c || true
 
 rc=0
-for mode in sys noto sub; do
+for mode in sys merged; do
   name="android-api${API_LEVEL}-${mode}"
   adb shell am force-stop com.android.chrome
   adb shell am start -a android.intent.action.VIEW -d "'http://10.0.2.2:8000/?platform=${name}&mode=${mode}'" com.android.chrome
